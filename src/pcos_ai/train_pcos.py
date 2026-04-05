@@ -13,6 +13,7 @@ from sklearn.pipeline import Pipeline
 from .config import load_config
 from .data_loader import load_excel_data
 from .ensemble import build_voting_ensemble
+from .explainability import compute_global_shap_explanation, summarize_shap_importance
 from .evaluate import (
     cross_validate_model,
     evaluate_holdout,
@@ -22,12 +23,13 @@ from .evaluate import (
 )
 from .feature_utils import find_target_column, prepare_feature_frame
 from .model_factory import create_models
-from .plotting import save_combined_roc_plot, save_confusion_matrix_plot, save_roc_curve_plot
+from .plotting import save_combined_roc_plot, save_confusion_matrix_plot, save_roc_curve_plot, save_shap_summary_plots
 from .preprocessing import build_preprocessor
 from .utils import configure_logging, ensure_dir, write_markdown
 
 
 LOGGER = logging.getLogger("pcos_ai.train_pcos")
+EXPLAINABILITY_BACKGROUND_ROWS = 50
 
 
 def _run_training(
@@ -339,8 +341,76 @@ def _run_training(
         "target_column": target_column,
         "skipped_optional_models": skipped_optional,
         "feature_columns": list(features.columns),
+        "explainability_background": x_train.sample(
+            n=min(len(x_train), EXPLAINABILITY_BACKGROUND_ROWS),
+            random_state=config.random_seed,
+        ).reset_index(drop=True),
     }
     joblib.dump(artifact, best_model_path)
+
+    shap_summary_csv_path = reports_dir / f"{condition_name}_shap_summary.csv"
+    shap_summary_plot_path = reports_dir / f"{condition_name}_shap_summary_beeswarm.png"
+    shap_bar_plot_path = reports_dir / f"{condition_name}_shap_summary_bar.png"
+    shap_report_path = reports_dir / f"{condition_name}_shap_report.md"
+    shap_report_section = (
+        "## SHAP Explainability\n\n"
+        "- Status: unavailable\n"
+        "- Reason: SHAP summary generation was not attempted.\n"
+    )
+    try:
+        shap_explanation, shap_evaluation_frame = compute_global_shap_explanation(
+            artifact,
+            x_test.reset_index(drop=True),
+        )
+        shap_summary = summarize_shap_importance(
+            artifact,
+            x_test.reset_index(drop=True),
+        )
+        shap_summary.to_csv(shap_summary_csv_path, index=False)
+        save_shap_summary_plots(
+            shap_explanation,
+            shap_summary_plot_path,
+            shap_bar_plot_path,
+        )
+        top_feature_lines = "\n".join(
+            f"- `{row.feature}`: mean |SHAP| `{row.mean_abs_shap:.6f}`, mean SHAP `{row.mean_shap:.6f}`"
+            for row in shap_summary.head(10).itertuples(index=False)
+        )
+        shap_report = f"""# {condition_name.upper()} SHAP Report
+
+## Summary
+
+- Source model: `{best_model_path}`
+- Evaluation rows summarized: `{len(shap_evaluation_frame)}`
+- Summary CSV: `{shap_summary_csv_path}`
+- SHAP beeswarm plot: `{shap_summary_plot_path}`
+- SHAP bar plot: `{shap_bar_plot_path}`
+
+## Top Features
+
+{top_feature_lines}
+"""
+        write_markdown(shap_report_path, shap_report)
+        shap_report_section = f"""## SHAP Explainability
+
+- Status: available
+- Summary CSV: `{shap_summary_csv_path}`
+- SHAP beeswarm plot: `{shap_summary_plot_path}`
+- SHAP bar plot: `{shap_bar_plot_path}`
+- Detailed report: `{shap_report_path}`
+"""
+    except Exception as exc:
+        logger.warning("Skipping SHAP report generation for %s: %s", condition_name.upper(), exc)
+        write_markdown(
+            shap_report_path,
+            f"# {condition_name.upper()} SHAP Report\n\n- Status: unavailable\n- Reason: {exc}\n",
+        )
+        shap_report_section = f"""## SHAP Explainability
+
+- Status: unavailable
+- Reason: `{exc}`
+- Detailed report: `{shap_report_path}`
+"""
 
     confusion_matrix_path = reports_dir / f"{condition_name}_confusion_matrix.png"
     save_confusion_matrix_plot(
@@ -384,6 +454,8 @@ def _run_training(
 
 {per_model_plots}
 
+{shap_report_section}
+
 ## Notes
 
 - Threshold tuning used the `{config.training["threshold_strategy"]}` strategy with default threshold `{config.training["default_threshold"]}`.
@@ -404,6 +476,10 @@ def _run_training(
         "comparison_csv_path": str(comparison_csv_path),
         "plot_manifest_path": str(plot_manifest_path),
         "confusion_matrix_path": str(confusion_matrix_path),
+        "shap_summary_csv_path": str(shap_summary_csv_path),
+        "shap_summary_plot_path": str(shap_summary_plot_path),
+        "shap_bar_plot_path": str(shap_bar_plot_path),
+        "shap_report_path": str(shap_report_path),
         "models_dir": str(models_dir),
         "reports_dir": str(reports_dir),
     }

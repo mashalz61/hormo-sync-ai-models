@@ -90,3 +90,62 @@ def save_combined_roc_plot(
     figure.tight_layout()
     figure.savefig(output, dpi=200, bbox_inches="tight")
     plt.close(figure)
+
+
+def save_feature_importance_plot(
+    summary_frame,
+    output_path: str | Path,
+    title: str,
+    *,
+    top_k: int = 10,
+) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    output = Path(output_path)
+    top_frame = summary_frame.head(top_k).iloc[::-1]
+
+    figure, axis = plt.subplots(figsize=(8, max(4, 0.5 * len(top_frame))))
+    axis.barh(top_frame["feature"], top_frame["mean_abs_shap"], color="#1f77b4")
+    axis.set_xlabel("Mean |SHAP value|")
+    axis.set_ylabel("Feature")
+    axis.set_title(title)
+    axis.grid(axis="x", alpha=0.3)
+    figure.tight_layout()
+    figure.savefig(output, dpi=200, bbox_inches="tight")
+    plt.close(figure)
+
+
+def save_shap_summary_plots(
+    explanation,
+    output_beeswarm_path: str | Path,
+    output_bar_path: str | Path,
+) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import shap  # type: ignore
+
+    beeswarm_output = Path(output_beeswarm_path)
+    bar_output = Path(output_bar_path)
+
+    plt.figure(figsize=(10, 7))
+    shap.summary_plot(explanation.values, explanation.data, feature_names=explanation.feature_names, show=False)
+    plt.tight_layout()
+    plt.savefig(beeswarm_output, dpi=200, bbox_inches="tight")
+    plt.close()
+
+    plt.figure(figsize=(10, 7))
+    shap.summary_plot(
+        explanation.values,
+        explanation.data,
+        feature_names=explanation.feature_names,
+        plot_type="bar",
+        show=False,
+    )
+    plt.tight_layout()
+    plt.savefig(bar_output, dpi=200, bbox_inches="tight")
+    plt.close()

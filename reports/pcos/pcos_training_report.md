@@ -2,7 +2,7 @@
 
 ## Summary
 
-- Input data: `data/pcos/PCOS_data.xlsx`
+- Input data: `data/PCOS_data.xlsx`
 - Detected target: `PCOS (Y/N)`
 - Final selected model: `extra_trees`
 - Validation ROC-AUC: `0.9782`
@@ -29,6 +29,15 @@ logistic_regression, svm, adaboost, random_forest, extra_trees
 - `random_forest`: train ROC `reports/pcos/pcos_random_forest_train_roc_curve.png`, train confusion `reports/pcos/pcos_random_forest_train_confusion_matrix.png`; validation ROC `reports/pcos/pcos_random_forest_validation_roc_curve.png`, validation confusion `reports/pcos/pcos_random_forest_validation_confusion_matrix.png`; test ROC `reports/pcos/pcos_random_forest_test_roc_curve.png`, test confusion `reports/pcos/pcos_random_forest_test_confusion_matrix.png`
 - `extra_trees`: train ROC `reports/pcos/pcos_extra_trees_train_roc_curve.png`, train confusion `reports/pcos/pcos_extra_trees_train_confusion_matrix.png`; validation ROC `reports/pcos/pcos_extra_trees_validation_roc_curve.png`, validation confusion `reports/pcos/pcos_extra_trees_validation_confusion_matrix.png`; test ROC `reports/pcos/pcos_extra_trees_test_roc_curve.png`, test confusion `reports/pcos/pcos_extra_trees_test_confusion_matrix.png`
 - `voting_ensemble`: train ROC `reports/pcos/pcos_voting_ensemble_train_roc_curve.png`, train confusion `reports/pcos/pcos_voting_ensemble_train_confusion_matrix.png`; validation ROC `reports/pcos/pcos_voting_ensemble_validation_roc_curve.png`, validation confusion `reports/pcos/pcos_voting_ensemble_validation_confusion_matrix.png`; test ROC `reports/pcos/pcos_voting_ensemble_test_roc_curve.png`, test confusion `reports/pcos/pcos_voting_ensemble_test_confusion_matrix.png`
+
+## SHAP Explainability
+
+- Status: available
+- Summary CSV: `reports/pcos/pcos_shap_summary.csv`
+- SHAP beeswarm plot: `reports/pcos/pcos_shap_summary_beeswarm.png`
+- SHAP bar plot: `reports/pcos/pcos_shap_summary_bar.png`
+- Detailed report: `reports/pcos/pcos_shap_report.md`
+
 
 ## Notes
 

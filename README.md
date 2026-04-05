@@ -35,6 +35,7 @@ This project is for decision support and educational or research workflows only.
 - Optional probability calibration when it improves validation ROC-AUC
 - Markdown training reports, CSV metrics, and confusion matrix plots
 - ROC curve and confusion matrix plots for every evaluated model across train, validation, and test phases
+- SHAP-based local feature explanations for saved clinical model artifacts
 - Streamlit app for manual input or single-row CSV prediction
 - Graceful skip of insulin resistance training when no valid IR target column exists
 
@@ -67,9 +68,13 @@ pcos_ai_project/
       evaluate.py
       ensemble.py
       predict.py
+      api.py
+      calorie_predictor.py
+      exercise_predictor.py
       utils.py
       plotting.py
   tests/
+    test_api.py
     test_preprocessing.py
     test_prediction_schema.py
 ```
@@ -100,6 +105,8 @@ pip install deep-forest
 
 If these optional packages are not installed, the project still runs and logs that the related models were skipped.
 
+`shap` is included in `requirements.txt` so local explanation support is installed with the main project dependencies.
+
 ## Configuration
 
 Default settings live in [`configs/default.yaml`](/Users/muqeetworkstation/Documents/hormo-sync/bac/pcos_ai_project/configs/default.yaml). You can customize:
@@ -129,12 +136,17 @@ Training will:
 - optionally calibrate probabilities if that helps validation ROC-AUC
 - train a voting ensemble from the best compatible models
 - save the best final artifact and reports
+- store a background sample so the saved model can produce SHAP explanations for individual predictions
 
 Outputs include:
 
 - `models/pcos/best_pcos_model.joblib`
 - `reports/pcos/pcos_model_comparison.csv`
 - `reports/pcos/pcos_training_report.md`
+- `reports/pcos/pcos_shap_summary.csv`
+- `reports/pcos/pcos_shap_report.md`
+- `reports/pcos/pcos_shap_summary_beeswarm.png`
+- `reports/pcos/pcos_shap_summary_bar.png`
 - `reports/pcos/pcos_confusion_matrix.png`
 - `reports/pcos/pcos_all_models_roc_curve.png`
 - `reports/pcos/pcos_plot_manifest.csv`
@@ -197,6 +209,8 @@ Available endpoints:
 - `GET /health`
 - `POST /predict/pcos`
 - `POST /predict/ir`
+- `POST /predict/calories`
+- `POST /predict/exercise`
 
 Example request:
 
@@ -210,6 +224,53 @@ curl -X POST "http://127.0.0.1:8000/predict/pcos" \
       "Cycle(R/I)": 4,
       "Weight gain(Y/N)": 1
     }
+  }'
+```
+
+When SHAP is available, PCOS and IR prediction responses also include a `shap_explanation` object with the most influential input features for that prediction.
+
+Calorie estimation request with grams:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict/calories" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "meal_name": "aloo gosht",
+    "grams": 200
+  }'
+```
+
+Calorie estimation request with portion count:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict/calories" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "meal_name": "aloo gosht",
+    "portion_count": 2
+  }'
+```
+
+Exercise recommendation request by name:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict/exercise" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "exercise_name": "push ups",
+    "duration_minutes": 45
+  }'
+```
+
+Exercise recommendation request by filters:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict/exercise" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "difficulty_level": "Beginner",
+    "target_muscle_group": "legs",
+    "limit": 2
   }'
 ```
 

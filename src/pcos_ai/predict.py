@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
+from .explainability import explain_prediction_with_shap
 from .feature_utils import coerce_dirty_numeric_series
 from .utils import pretty_json, probability_to_level, slugify_column_name
 
@@ -92,6 +93,7 @@ def predict_from_dataframe(bundle: dict[str, Any], data_frame: pd.DataFrame) -> 
         response[f"{condition_name}_probability"] = probability
     else:
         response[f"{condition_name}_probability_of_developing"] = probability
+    response["shap_explanation"] = explain_prediction_with_shap(bundle, data_frame)
     return response
 
 
