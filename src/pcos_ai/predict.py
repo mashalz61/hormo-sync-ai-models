@@ -12,6 +12,17 @@ from .explainability import explain_prediction_with_shap
 from .feature_utils import coerce_dirty_numeric_series
 from .utils import pretty_json, probability_to_level, slugify_column_name
 
+MISSING_VALUE_TOKENS = {
+    "",
+    "na",
+    "n/a",
+    "nan",
+    "none",
+    "null",
+    "nil",
+    "unknown",
+}
+
 
 def load_model_bundle(path: str | Path) -> dict[str, Any]:
     bundle = joblib.load(path)
@@ -51,10 +62,13 @@ def normalize_inference_inputs(data_frame: pd.DataFrame) -> pd.DataFrame:
         series = normalized[column]
         if series.dtype == object:
             lowered = series.astype(str).str.strip().str.lower()
+            lowered = lowered.map(lambda value: np.nan if value in MISSING_VALUE_TOKENS else value)
             if "y_n" in slug or "pregnant" in slug or "exercise" in slug:
                 normalized[column] = lowered.map(lambda value: yes_no_map.get(value, value))
             elif "cycle_r_i" in slug:
                 normalized[column] = lowered.map(lambda value: cycle_map.get(value, value))
+            else:
+                normalized[column] = lowered
         normalized[column] = coerce_dirty_numeric_series(normalized[column])
     return normalized
 

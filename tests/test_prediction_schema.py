@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 
 from src.pcos_ai import predict as predict_module
 from src.pcos_ai.explainability import summarize_shap_importance
-from src.pcos_ai.predict import predict_from_dataframe
+from src.pcos_ai.predict import normalize_inference_inputs, predict_from_dataframe
 from src.pcos_ai.preprocessing import build_preprocessor
 
 
@@ -109,3 +109,21 @@ def test_summarize_shap_importance_orders_features(monkeypatch) -> None:
     summary = summarize_shap_importance(bundle, frame)
     assert list(summary["feature"]) == ["Weight (Kg)", "Age (yrs)"]
     assert list(summary["rank"]) == [1, 2]
+
+
+def test_normalize_inference_inputs_treats_common_missing_strings_as_nan() -> None:
+    frame = pd.DataFrame(
+        {
+            "Age (yrs)": ["none"],
+            "Cycle(R/I)": ["null"],
+            "Weight gain(Y/N)": [""],
+            "Notes": ["unknown"],
+        }
+    )
+
+    normalized = normalize_inference_inputs(frame)
+
+    assert pd.isna(normalized.loc[0, "Age (yrs)"])
+    assert pd.isna(normalized.loc[0, "Cycle(R/I)"])
+    assert pd.isna(normalized.loc[0, "Weight gain(Y/N)"])
+    assert pd.isna(normalized.loc[0, "Notes"])
