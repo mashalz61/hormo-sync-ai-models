@@ -131,19 +131,29 @@ def save_shap_summary_plots(
 
     beeswarm_output = Path(output_beeswarm_path)
     bar_output = Path(output_bar_path)
+    feature_names = list(explanation.feature_names or [])
+    max_display = len(feature_names) if feature_names else None
+    figure_height = max(7, int(len(feature_names) * 0.35)) if feature_names else 7
 
-    plt.figure(figsize=(10, 7))
-    shap.summary_plot(explanation.values, explanation.data, feature_names=explanation.feature_names, show=False)
+    plt.figure(figsize=(10, figure_height))
+    shap.summary_plot(
+        explanation.values,
+        explanation.data,
+        feature_names=feature_names or None,
+        max_display=max_display,
+        show=False,
+    )
     plt.tight_layout()
     plt.savefig(beeswarm_output, dpi=200, bbox_inches="tight")
     plt.close()
 
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(10, figure_height))
     shap.summary_plot(
         explanation.values,
         explanation.data,
-        feature_names=explanation.feature_names,
+        feature_names=feature_names or None,
         plot_type="bar",
+        max_display=max_display,
         show=False,
     )
     plt.tight_layout()

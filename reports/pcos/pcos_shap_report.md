@@ -10,13 +10,13 @@
 
 ## Top Features
 
-- `Follicle No. (R)`: mean |SHAP| `0.082717`, mean SHAP `-0.022294`
-- `Skin darkening (Y/N)`: mean |SHAP| `0.069949`, mean SHAP `-0.009528`
-- `Weight gain(Y/N)`: mean |SHAP| `0.063932`, mean SHAP `-0.013880`
-- `Follicle No. (L)`: mean |SHAP| `0.058807`, mean SHAP `-0.009988`
-- `hair growth(Y/N)`: mean |SHAP| `0.056484`, mean SHAP `0.008845`
-- `Cycle(R/I)`: mean |SHAP| `0.038443`, mean SHAP `-0.017203`
-- `Fast food (Y/N)`: mean |SHAP| `0.030029`, mean SHAP `-0.001004`
-- `Pimples(Y/N)`: mean |SHAP| `0.022057`, mean SHAP `-0.003190`
-- `Cycle length(days)`: mean |SHAP| `0.012079`, mean SHAP `-0.002341`
-- `Reg.Exercise(Y/N)`: mean |SHAP| `0.011747`, mean SHAP `-0.004202`
+- `Follicle No. (R)`: mean |SHAP| `0.083562`, mean SHAP `-0.021304`
+- `Skin darkening (Y/N)`: mean |SHAP| `0.066540`, mean SHAP `-0.017119`
+- `Weight gain(Y/N)`: mean |SHAP| `0.063231`, mean SHAP `-0.010431`
+- `Follicle No. (L)`: mean |SHAP| `0.058159`, mean SHAP `-0.008131`
+- `hair growth(Y/N)`: mean |SHAP| `0.053954`, mean SHAP `0.007111`
+- `Cycle(R/I)`: mean |SHAP| `0.041174`, mean SHAP `-0.015619`
+- `Fast food (Y/N)`: mean |SHAP| `0.029192`, mean SHAP `-0.000941`
+- `Pimples(Y/N)`: mean |SHAP| `0.020560`, mean SHAP `-0.003270`
+- `Cycle length(days)`: mean |SHAP| `0.013049`, mean SHAP `-0.003132`
+- `Reg.Exercise(Y/N)`: mean |SHAP| `0.012359`, mean SHAP `-0.002601`
